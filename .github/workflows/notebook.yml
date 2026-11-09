@@ -1,4 +1,4 @@
-name: Notebook
+name: Checks
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  run-notebook:
+  checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,5 +20,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
-      - name: Run the notebook from top to bottom
-        run: jupyter nbconvert --to notebook --execute notebooks/01_market_sales_exploration.ipynb --output-dir "$RUNNER_TEMP"
+      - name: Run the tests
+        run: pytest
+
+      - name: Clean the data
+        run: python -m market_sales.clean
+
+      - name: Run the notebooks from top to bottom
+        run: |
+          jupyter nbconvert --to notebook --execute notebooks/01_market_sales_exploration.ipynb --output-dir "$RUNNER_TEMP"
+          jupyter nbconvert --to notebook --execute notebooks/02_data_cleaning.ipynb --output-dir "$RUNNER_TEMP"
