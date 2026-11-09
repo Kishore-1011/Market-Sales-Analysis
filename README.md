@@ -23,7 +23,21 @@ The biggest differences are in *when* people shop. Saturday averages 37% more th
 
 ![Average sales per day by weekday](reports/figures/weekday_pattern.png)
 
-These are descriptions, not conclusions. Whether a difference is bigger than chance is tested in the next stage of the project. And because the data is sample data, none of it says anything about real shoppers.
+These are descriptions, not conclusions. Whether a difference is bigger than chance is tested in the next section. And because the data is sample data, none of it says anything about real shoppers.
+
+## Are the differences real?
+
+Every claim above is tested in [`04_testing_findings.ipynb`](notebooks/04_testing_findings.ipynb) with 22 statistical tests ([full results](reports/statistical_tests.csv)). The p-values are adjusted for running so many tests at once, because with 22 tests about one would look significant by luck alone.
+
+**None of the 22 differences is real.** The cities, product lines, customer types and payment methods can't be told apart, and Saturday's 37% lead over Monday is the sort of gap that shuffling the weekday labels at random produces 51% of the time:
+
+![Gap between best and worst weekday after shuffling, with the real gap in the middle of the pile](reports/figures/weekday_gap_by_chance.png)
+
+A finding of "nothing" only means something if the tests would have noticed a real difference, so this was checked by planting known differences in the data. With nothing planted the tests raised a false alarm about 5% of the time, as they should, and a real 20% to 30% difference between cities was found. But a Saturday boost has to reach roughly +70% before it's found reliably, because there are only 12 or 13 of each weekday in 89 days:
+
+![How often a planted difference of each size is noticed](reports/figures/detection_power.png)
+
+So the honest reading is that no pattern is *proven*, and that small weekday or hour effects can't be ruled out with this much data. Sample data like this, with prices, quantities and ratings spread almost evenly, is often free of patterns. With real data the same code would be able to find them.
 
 ## The data
 
@@ -49,7 +63,8 @@ pip install -r requirements-dev.txt
 
 python -m market_sales.clean    # clean the raw data into data/processed/
 python -m market_sales.charts   # redraw the charts in reports/figures/
-pytest                          # check the cleaning, the numbers and the charts
+python -m market_sales.stats    # rerun the statistical tests
+pytest                          # check the cleaning, the statistics and the charts
 ```
 
 Then open a notebook in Jupyter or VS Code. They work whether you start from the project folder or the `notebooks` folder:
@@ -57,6 +72,7 @@ Then open a notebook in Jupyter or VS Code. They work whether you start from the
 - [`01_market_sales_exploration.ipynb`](notebooks/01_market_sales_exploration.ipynb): the original first look at the data
 - [`02_data_cleaning.ipynb`](notebooks/02_data_cleaning.ipynb): how the raw file is cleaned and checked
 - [`03_sales_analysis.ipynb`](notebooks/03_sales_analysis.ipynb): sales by city, product, time and customer
+- [`04_testing_findings.ipynb`](notebooks/04_testing_findings.ipynb): which differences are real, and what the data can and can't show
 
 ## Data quality
 
@@ -76,6 +92,7 @@ Market-Sales-Analysis/
 │   ├── cleaning.py            # Cleaning rules and data checks
 │   ├── clean.py               # python -m market_sales.clean
 │   ├── analysis.py            # Sales questions, answered as tables
+│   ├── stats.py               # Statistical tests, and checks that they work
 │   └── charts.py              # The charts
 ├── data/
 │   ├── raw/                   # The original CSV, never edited
@@ -83,7 +100,9 @@ Market-Sales-Analysis/
 ├── notebooks/                 # The analysis
 ├── docs/data_dictionary.md    # What every column means
 ├── tests/                     # Automated tests
-├── reports/figures/           # The charts
+├── reports/
+│   ├── figures/               # The charts
+│   └── statistical_tests.csv  # Results of every test
 ├── requirements.txt           # Libraries the analysis needs
 └── requirements-dev.txt       # Plus what's needed to run notebooks and tests
 ```
@@ -95,7 +114,7 @@ This project is being improved in stages:
 1. **Run anywhere:** folders, relative paths, pinned libraries and this README *(done)*
 2. **Clean the data:** real timestamps, honest column names and automatic checks *(done)*
 3. **Better questions:** sales in money, by city, product, time and customer, with one set of reusable charts *(done)*
-4. **Test the findings:** use statistics to separate real differences from chance
+4. **Test the findings:** 22 tests with adjusted p-values, and a check that the tests can find real differences *(done)*
 5. **Presentation:** a clear written story, reusable code and tests
 6. **Dashboard:** an interactive page with filters
 

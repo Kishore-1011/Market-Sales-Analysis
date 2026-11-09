@@ -1,0 +1,23 @@
+id,family,question,test,n,statistic,p_value,effect_size,effect_name,p_adjusted,verdict
+city_orders,City,Do the cities make the same number of sales?,"Chi-square, even split",1000,0.224,0.894044,0.015,Cohen's w,1.0,No evidence of a difference
+city_order_size,City,Does the average sale differ between cities?,Kruskal-Wallis,1000,0.4168,0.811889,0.0004,epsilon-squared,1.0,No evidence of a difference
+city_total_gap,City,Is the gap between the best and worst city's total sales more than chance?,"Permutation, best vs worst",1000,0.0412,0.80142,0.0412,relative gap,1.0,No evidence of a difference
+city_rating,City,Do customers rate the cities differently?,Kruskal-Wallis,1000,4.0861,0.129634,0.0041,epsilon-squared,1.0,No evidence of a difference
+product_orders,Product line,Are some product lines bought more often?,"Chi-square, even split",1000,2.72,0.743058,0.0522,Cohen's w,1.0,No evidence of a difference
+product_order_size,Product line,Does the average sale differ between product lines?,Kruskal-Wallis,1000,2.1537,0.8275,0.0022,epsilon-squared,1.0,No evidence of a difference
+product_total_gap,Product line,Is the gap between the best and worst line's total sales more than chance?,"Permutation, best vs worst",1000,0.1413,0.894211,0.1413,relative gap,1.0,No evidence of a difference
+product_rating,Product line,Do customers rate product lines differently?,Kruskal-Wallis,1000,2.7281,0.74181,0.0027,epsilon-squared,1.0,No evidence of a difference
+product_by_city,Product line,Does each city really favour different product lines?,"Chi-square, independence",1000,11.5594,0.315623,0.076,Cramer's V,1.0,No evidence of a difference
+weekday_daily_sales,Time,Do daily sales differ by day of the week?,Kruskal-Wallis,89,6.6502,0.354408,0.0756,epsilon-squared,1.0,No evidence of a difference
+weekday_gap,Time,Is the gap between the best and worst weekday more than chance?,"Permutation, best vs worst",89,0.3669,0.513849,0.3669,relative gap,1.0,No evidence of a difference
+weekend,Time,Do weekend days sell more than weekdays?,Mann-Whitney,89,1013.0,0.052398,0.2663,rank-biserial,1.0,No evidence of a difference
+month_daily_sales,Time,Do daily sales differ between months?,Kruskal-Wallis,89,0.9973,0.607348,0.0113,epsilon-squared,1.0,No evidence of a difference
+trend,Time,Are daily sales rising or falling over the period?,Spearman,89,-0.0716,0.505195,0.0716,correlation,1.0,No evidence of a difference
+hour_orders,Time,Are some hours of the day busier than others?,"Chi-square, even split",1000,18.292,0.050233,0.1352,Cohen's w,1.0,No evidence of a difference
+hour_total_gap,Time,Is the gap between the best and worst hour's total sales more than chance?,"Permutation, best vs worst",1000,0.7284,0.312069,0.7284,relative gap,1.0,No evidence of a difference
+hour_order_size,Time,Does the average sale differ by hour?,Kruskal-Wallis,1000,10.7797,0.374937,0.0108,epsilon-squared,1.0,No evidence of a difference
+customer_type,Customers,Do members spend more per sale than other customers?,Mann-Whitney,1000,127453.0,0.591159,0.0196,rank-biserial,1.0,No evidence of a difference
+gender,Customers,Do women and men spend differently per sale?,Mann-Whitney,1000,132497.5,0.100631,0.06,rank-biserial,1.0,No evidence of a difference
+payment_by_city,Customers,Does the way people pay differ between cities?,"Chi-square, independence",1000,3.2997,0.508976,0.0406,Cramer's V,1.0,No evidence of a difference
+customer_by_city,Customers,Does the mix of members and others differ between cities?,"Chi-square, independence",1000,0.4188,0.811067,0.0205,Cramer's V,1.0,No evidence of a difference
+rating_vs_spend,Customers,Do happier customers spend more?,Spearman,1000,-0.0172,0.586379,0.0172,correlation,1.0,No evidence of a difference

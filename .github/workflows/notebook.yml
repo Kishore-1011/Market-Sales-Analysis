@@ -23,9 +23,10 @@ jobs:
       - name: Run the tests
         run: pytest
 
-      - name: Clean the data and draw the charts
+      - name: Clean the data, run the tests and draw the charts
         run: |
           python -m market_sales.clean
+          python -m market_sales.stats
           python -m market_sales.charts
 
       - name: Run the notebooks from top to bottom
@@ -33,3 +34,4 @@ jobs:
           jupyter nbconvert --to notebook --execute notebooks/01_market_sales_exploration.ipynb --output-dir "$RUNNER_TEMP"
           jupyter nbconvert --to notebook --execute notebooks/02_data_cleaning.ipynb --output-dir "$RUNNER_TEMP"
           jupyter nbconvert --to notebook --execute notebooks/03_sales_analysis.ipynb --output-dir "$RUNNER_TEMP"
+          jupyter nbconvert --to notebook --execute notebooks/04_testing_findings.ipynb --output-dir "$RUNNER_TEMP"

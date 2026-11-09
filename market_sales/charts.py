@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 import matplotlib.dates as mdates
+import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
@@ -23,6 +24,7 @@ from market_sales.analysis import (
 )
 from market_sales.cleaning import DataQualityError, load_clean
 from market_sales.config import RAW_DATA, ROOT
+from market_sales.stats import bootstrap_interval, permutation_gap, power_city_order_size, power_weekday
 
 FIGURES_DIR = ROOT / "reports" / "figures"
 
@@ -217,7 +219,102 @@ def order_size(df):
     return fig
 
 
+def city_order_intervals(df):
+    """Each city's average sale, with the range it could plausibly fall in. Overlapping ranges mean no clear difference."""
+    cities = _city_order(df)
+    overall = df["subtotal"].mean()
+    fig = _figure(7, 4.3)
+    axis = fig.subplots()
+    for position, city in enumerate(cities):
+        values = df.loc[df["city"] == city, "subtotal"]
+        low, high = bootstrap_interval(values)
+        axis.errorbar(position, values.mean(), yerr=[[values.mean() - low], [high - values.mean()]], fmt="o",
+                      color=CITY_COLORS[city], capsize=8, markersize=9, linewidth=2.5)
+        axis.text(position + 0.12, values.mean(), f"{values.mean():,.0f}\n({low:,.0f} to {high:,.0f})",
+                  va="center", fontsize=9, bbox={"facecolor": "white", "edgecolor": "none", "pad": 1.5})
+    axis.axhline(overall, color=NEUTRAL, linestyle="--", linewidth=1.2, label=f"All cities: {overall:,.0f}")
+    axis.set_xticks(range(len(cities)), cities)
+    axis.set_xlim(-0.5, len(cities) - 0.3)
+    axis.set_ylim(0, df.groupby("city", observed=True)["subtotal"].mean().max() * 1.6)
+    axis.set_ylabel("Average sale, before tax")
+    axis.set_title("Average sale by city, with the range it could plausibly be in (95%)")
+    axis.legend(frameon=False, loc="lower right")
+    _thousands(axis.yaxis)
+    _clean_axes(axis)
+    return fig
+
+
+def weekday_spread(df):
+    """Every day's sales, grouped by weekday. Shows how much days overlap, which averages hide."""
+    daily = daily_sales(df)
+    names = list(df["weekday"].cat.categories)
+    weekdays = daily.index.day_name()
+    rng = np.random.default_rng(0)
+    fig = _figure(9, 4.5)
+    axis = fig.subplots()
+    for position, name in enumerate(names):
+        values = daily[weekdays == name]
+        axis.scatter(position + rng.uniform(-0.18, 0.18, len(values)), values, color=LIGHT, edgecolor=NEUTRAL,
+                     s=34, zorder=2)
+        axis.scatter(position, values.mean(), marker="D", s=90, color=CITY_COLORS["Yangon"], zorder=3,
+                     label="Average for the weekday" if position == 0 else None)
+    axis.axhline(daily.mean(), color=NEUTRAL, linestyle="--", linewidth=1.2, label=f"Average day: {daily.mean():,.0f}")
+    axis.set_xticks(range(len(names)), names)
+    axis.set_ylim(0, daily.max() * 1.08)
+    axis.set_ylabel(SALES_LABEL)
+    axis.set_title("Each dot is one day. Weekdays overlap far more than their averages suggest")
+    axis.legend(frameon=False, loc="upper left", ncols=2)
+    _thousands(axis.yaxis)
+    _clean_axes(axis)
+    return fig
+
+
+def weekday_gap_by_chance(df):
+    """The best-versus-worst weekday gap seen after shuffling the weekdays, against the real one."""
+    daily = daily_sales(df)
+    codes, groups = pd.factorize(daily.index.day_name(), sort=True)
+    observed, p_value, shuffled = permutation_gap(daily.to_numpy(), codes, len(groups), use_mean=True)
+    fig = _figure(8, 4.3)
+    axis = fig.subplots()
+    axis.hist(shuffled, bins=40, color=LIGHT, edgecolor="white")
+    axis.axvline(observed, color=CITY_COLORS["Mandalay"], linewidth=2.5,
+                 label=f"Real gap: {observed:.0%} (chance alone gives this or more {p_value:.0%} of the time)")
+    axis.set_xlabel("Gap between the best and worst weekday's average sales")
+    axis.set_ylabel("Number of shuffles (out of 10,000)")
+    axis.set_title("With the weekday labels shuffled at random, gaps this big are common")
+    axis.xaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{value:.0%}"))
+    axis.legend(frameon=False, loc="upper right")
+    _clean_axes(axis)
+    return fig
+
+
+def detection_power(city_power, weekday_power):
+    """How big a real difference has to be before these tests reliably notice it."""
+    fig = _figure(9, 4.5)
+    axis = fig.subplots()
+    axis.plot(city_power["lift"], city_power["detected"], marker="o", linewidth=2.5, color=CITY_COLORS["Naypyitaw"],
+              label="One city's average sale is higher")
+    axis.plot(weekday_power["lift"], weekday_power["gap_detected"], marker="o", linewidth=2.5,
+              color=CITY_COLORS["Mandalay"], label="Saturday's sales are higher")
+    axis.axhline(0.8, color=NEUTRAL, linestyle=":", linewidth=1.5)
+    axis.text(axis.get_xlim()[1], 0.8, "reliable (80%) ", ha="right", va="bottom", color=NEUTRAL)
+    axis.axhline(0.05, color=NEUTRAL, linestyle=":", linewidth=1.5)
+    axis.text(axis.get_xlim()[1], 0.05, "false alarms (5%) ", ha="right", va="bottom", color=NEUTRAL)
+    axis.set_ylim(0, 1.05)
+    axis.set_xlabel("How much higher the real value is")
+    axis.set_ylabel("How often the test notices")
+    axis.set_title("How big does a real difference need to be before this data finds it?")
+    axis.xaxis.set_major_formatter(FuncFormatter(lambda value, _: f"+{value:.0%}"))
+    axis.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{value:.0%}"))
+    axis.legend(frameon=False, loc="center right")
+    _clean_axes(axis)
+    return fig
+
+
 CHARTS = {
+    "city_order_intervals": city_order_intervals,
+    "weekday_spread": weekday_spread,
+    "weekday_gap_by_chance": weekday_gap_by_chance,
     "city_sales": city_sales,
     "product_by_city": product_by_city,
     "daily_trend": daily_trend,
@@ -234,7 +331,9 @@ def save_all(df, directory=FIGURES_DIR):
     directory.mkdir(parents=True, exist_ok=True)
     for name, draw in CHARTS.items():
         draw(df).savefig(directory / f"{name}.png", dpi=130)
-    return sorted(CHARTS)
+    # The slowest chart: it runs the simulations that show how big a difference must be to be found.
+    detection_power(power_city_order_size(df), power_weekday(df)).savefig(directory / "detection_power.png", dpi=130)
+    return sorted([*CHARTS, "detection_power"])
 
 
 def main():

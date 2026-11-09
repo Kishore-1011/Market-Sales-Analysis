@@ -68,8 +68,43 @@ def test_text_colour_is_readable_on_each_background():
     assert charts._text_on("#56B4E9") == "black"
 
 
-def test_save_all_writes_every_chart(real, tmp_path):
+def test_the_interval_chart_shows_one_range_per_city(real):
+    axis = charts.city_order_intervals(real).axes[0]
+    assert len(axis.containers) == 3
+    assert axis.get_ylim()[0] == 0
+
+
+def test_the_weekday_chart_has_one_dot_per_day(real):
+    axis = charts.weekday_spread(real).axes[0]
+    dots = sum(len(collection.get_offsets()) for collection in axis.collections)
+    assert dots == 89 + 7  # every day, plus one average marker per weekday
+
+
+def test_the_chance_chart_reports_the_same_p_value_as_the_test(real):
+    from market_sales.stats import run_all
+
+    expected = run_all(real, permutations=500).set_index("id").loc["weekday_gap", "p_value"]
+    label = charts.weekday_gap_by_chance(real).axes[0].get_legend().get_texts()[0].get_text()
+    shown = int(label.split("this or more ")[1].split("%")[0])
+    assert abs(shown - expected * 100) < 3
+
+
+def test_the_detection_chart_draws_from_power_tables():
+    city = pd.DataFrame({"lift": [0, 0.1, 0.3], "detected": [0.05, 0.3, 0.95]})
+    weekday = pd.DataFrame({"lift": [0, 0.5, 1.0], "kruskal_detected": [0.04, 0.5, 0.97],
+                            "gap_detected": [0.05, 0.6, 0.99]})
+    axis = charts.detection_power(city, weekday).axes[0]
+    assert len(axis.lines) >= 2
+    assert axis.get_ylim()[0] == 0
+
+
+def test_save_all_writes_every_chart(real, tmp_path, monkeypatch):
+    # The power simulations are slow and have their own tests, so a quick stand-in is used here.
+    quick = pd.DataFrame({"lift": [0, 1.0], "detected": [0.05, 1.0], "kruskal_detected": [0.05, 1.0],
+                          "gap_detected": [0.05, 1.0]})
+    monkeypatch.setattr(charts, "power_city_order_size", lambda df: quick)
+    monkeypatch.setattr(charts, "power_weekday", lambda df: quick)
     names = save_all(real, tmp_path)
-    assert names == sorted(CHARTS)
+    assert names == sorted([*CHARTS, "detection_power"])
     for name in names:
         assert (tmp_path / f"{name}.png").stat().st_size > 5_000
