@@ -210,7 +210,8 @@ def run_all(df, permutations=PERMUTATIONS):
         len(df), chi_square_equal(_counts(df, "product_line")), "Cohen's w")
     add("product_order_size", "Product line", "Does the average sale differ between product lines?", "Kruskal-Wallis",
         len(df), kruskal(_by(df, "product_line")), "epsilon-squared")
-    add("product_total_gap", "Product line", "Is the gap between the best and worst line's total sales more than chance?",
+    add("product_total_gap", "Product line",
+        "Is the gap between the best and worst line's total sales more than chance?",
         "Permutation, best vs worst", len(df), gap_outcome(sales, df["product_line"]), "relative gap")
     add("product_rating", "Product line", "Do customers rate product lines differently?", "Kruskal-Wallis",
         len(df), kruskal(_by(df, "product_line", "rating")), "epsilon-squared")

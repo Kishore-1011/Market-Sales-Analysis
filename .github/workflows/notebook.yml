@@ -20,6 +20,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
+      - name: Check the code style
+        run: ruff check market_sales tests
+
       - name: Run the tests
         run: pytest
 

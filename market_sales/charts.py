@@ -71,8 +71,8 @@ def city_sales(df):
     fig = _figure(7, 4.3)
     axis = fig.subplots()
     bars = axis.bar(summary.index.astype(str), summary["sales"], color=[CITY_COLORS[c] for c in summary.index])
-    axis.bar_label(bars, labels=[f"{s:,.0f}\n{share:.1%}" for s, share in zip(summary["sales"], summary["share"])],
-                   padding=3)
+    labels = [f"{s:,.0f}\n{share:.1%}" for s, share in zip(summary["sales"], summary["share"], strict=True)]
+    axis.bar_label(bars, labels=labels, padding=3)
     axis.set_ylim(0, summary["sales"].max() * 1.18)
     axis.set_ylabel(SALES_LABEL)
     axis.set_title(f"Sales by city, {_period(df)}")
@@ -87,7 +87,7 @@ def product_by_city(df):
     cities = _city_order(df)
     fig = _figure(12, 4.6)
     axes = fig.subplots(1, len(cities), sharex=True, sharey=True)
-    for axis, city in zip(axes, cities):
+    for axis, city in zip(axes, cities, strict=True):
         sales = df[df["city"] == city].groupby("product_line", observed=True)["subtotal"].sum().reindex(order)
         bars = axis.barh(order.astype(str), sales, color=CITY_COLORS[city])
         axis.bar_label(bars, labels=[f"{value:,.0f}" for value in sales], padding=3, fontsize=9)
@@ -130,7 +130,8 @@ def weekday_pattern(df):
     bars = axis.bar(average.index.astype(str), average.values, color=NEUTRAL)
     axis.bar_label(bars, labels=[f"{value:,.0f}" for value in average.values], padding=3,
                    bbox={"facecolor": "white", "edgecolor": "none", "pad": 1.5})  # keeps labels readable over the line
-    axis.axhline(overall, color=CITY_COLORS["Yangon"], linewidth=1.5, linestyle="--", label=f"Average day: {overall:,.0f}")
+    axis.axhline(overall, color=CITY_COLORS["Yangon"], linewidth=1.5, linestyle="--",
+                 label=f"Average day: {overall:,.0f}")
     axis.legend(frameon=False, loc="upper left")
     axis.set_ylim(0, average.max() * 1.25)
     axis.set_ylabel(f"Average {SALES_LABEL.lower()} per day")
@@ -179,7 +180,7 @@ def monthly_by_city(df):
 def _stacked_shares(axis, mix, title):
     cities = list(mix.index.astype(str))
     left = pd.Series(0.0, index=mix.index)
-    for color, column in zip(SEGMENT_COLORS, mix.columns):
+    for color, column in zip(SEGMENT_COLORS, mix.columns, strict=False):
         bars = axis.barh(cities, mix[column], left=left, color=color, label=str(column))
         axis.bar_label(bars, labels=[f"{value:.0%}" for value in mix[column]], label_type="center",
                        color=_text_on(color), fontsize=9)
@@ -220,7 +221,7 @@ def order_size(df):
 
 
 def city_order_intervals(df):
-    """Each city's average sale, with the range it could plausibly fall in. Overlapping ranges mean no clear difference."""
+    """Each city's average sale and the range it could plausibly fall in. Overlap means no clear difference."""
     cities = _city_order(df)
     overall = df["subtotal"].mean()
     fig = _figure(7, 4.3)

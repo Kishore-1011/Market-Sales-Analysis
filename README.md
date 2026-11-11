@@ -5,9 +5,15 @@
 ![pandas](https://img.shields.io/badge/pandas-3.1-150458?logo=pandas&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-An analysis of supermarket sales: how much each of three branches sold, what customers bought, and how they paid.
+An analysis of 1,000 supermarket sales across three branches: how much each sold, what customers bought, and whether any of the differences are real.
 
-> **This is sample data.** The 1,000 sales are a widely shared practice dataset, not records from a real shop. The analysis shows how to explore sales data, and its findings shouldn't be read as facts about real customers.
+> **This is sample data.** The sales are a widely shared practice dataset, not records from a real shop. The analysis shows how to explore and test sales data, and its findings shouldn't be read as facts about real customers.
+
+## The short version
+
+**None of the differences is large enough to call real.** Naypyitaw sells 4.1% more than the lowest city, Saturday averages 37% more than Monday, and 19:00 is the busiest hour. But all 22 questions tested came back "no evidence of a difference" once the tests were adjusted for asking so many. The tests can reliably find a gap of roughly a fifth between cities, so the cities really do look alike, while smaller weekday and hour effects can't be ruled out.
+
+**Read the full story in the [report](reports/report.md)**, or follow the steps in the [notebooks](#run-it).
 
 ## What the analysis shows
 
@@ -33,7 +39,7 @@ Every claim above is tested in [`04_testing_findings.ipynb`](notebooks/04_testin
 
 ![Gap between best and worst weekday after shuffling, with the real gap in the middle of the pile](reports/figures/weekday_gap_by_chance.png)
 
-A finding of "nothing" only means something if the tests would have noticed a real difference, so this was checked by planting known differences in the data. With nothing planted the tests raised a false alarm about 5% of the time, as they should, and a real 20% to 30% difference between cities was found. But a Saturday boost has to reach roughly +70% before it's found reliably, because there are only 12 or 13 of each weekday in 89 days:
+A finding of "nothing" only means something if the tests would have noticed a real difference, so this was checked by planting known differences in the data. With nothing planted the tests raised a false alarm between 4% and 7% of the time, close to the 5% they should, and a real 20% to 30% difference between cities was found. But a Saturday boost has to reach roughly +70% before it's found reliably, because there are only 12 or 13 of each weekday in 89 days:
 
 ![How often a planted difference of each size is noticed](reports/figures/detection_power.png)
 
@@ -65,6 +71,7 @@ python -m market_sales.clean    # clean the raw data into data/processed/
 python -m market_sales.charts   # redraw the charts in reports/figures/
 python -m market_sales.stats    # rerun the statistical tests
 pytest                          # check the cleaning, the statistics and the charts
+ruff check market_sales tests   # check the code style
 ```
 
 Then open a notebook in Jupyter or VS Code. They work whether you start from the project folder or the `notebooks` folder:
@@ -101,6 +108,7 @@ Market-Sales-Analysis/
 ├── docs/data_dictionary.md    # What every column means
 ├── tests/                     # Automated tests
 ├── reports/
+│   ├── report.md              # The whole story in one page
 │   ├── figures/               # The charts
 │   └── statistical_tests.csv  # Results of every test
 ├── requirements.txt           # Libraries the analysis needs
@@ -115,7 +123,7 @@ This project is being improved in stages:
 2. **Clean the data:** real timestamps, honest column names and automatic checks *(done)*
 3. **Better questions:** sales in money, by city, product, time and customer, with one set of reusable charts *(done)*
 4. **Test the findings:** 22 tests with adjusted p-values, and a check that the tests can find real differences *(done)*
-5. **Presentation:** a clear written story, reusable code and tests
+5. **Presentation:** a written report, a README that leads with the conclusion, and a code style check *(done)*
 6. **Dashboard:** an interactive page with filters
 
 ## License

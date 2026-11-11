@@ -13,7 +13,6 @@ from market_sales.cleaning import (
 from market_sales.config import CLEAN_DATA, WEEKDAYS
 from tests.conftest import make_raw
 
-
 # --- The real file ---
 
 def test_real_file_cleans_without_problems(raw):
